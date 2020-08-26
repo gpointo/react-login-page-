@@ -27,11 +27,11 @@ const NavigationAuth = ({ authUser }) => (
     </li>
       {authUser.userType=="Tenent" ? 
       <li>
-        <Link to={ROUTES.TENENT}>TenentShit</Link>
+        <Link to={ROUTES.TENENT}>Make A Payment</Link>
       </li>
       :
       <li>
-      <Link to={ROUTES.ADMIN}>LandLordShit</Link>
+      <Link to={ROUTES.ADMIN}>View Payments</Link>
     </li>
     }
     <li>
