@@ -3,44 +3,113 @@ import 'firebase/auth';
 import 'firebase/database';
 
 const config = {
-  apiKey: "AIzaSyByxHXKCTiLV_-JF_GzVdutzf3T-vLAvdU",
-  authDomain: "landlord-app-483a9.firebaseapp.com",
-  databaseURL: "https://landlord-app-483a9.firebaseio.com",
-  projectId: "landlord-app-483a9",
-  storageBucket: "landlord-app-483a9.appspot.com",
-  messagingSenderId: "715826259596",
-  appId: "1:715826259596:web:7bdcec56458d87513bfda9",
-  measurementId: "G-2CHH3MYVKB"
+    apiKey: process.env.REACT_APP_API_KEY, 
+    authDomain: "the-landlord-app-2b08e.firebaseapp.com",
+    databaseURL: "https://the-landlord-app-2b08e.firebaseio.com",
+    projectId: "the-landlord-app-2b08e",
+    storageBucket: "the-landlord-app-2b08e.appspot.com",
+    messagingSenderId: "976421319620",
+    appId: "1:976421319620:web:47110dfd3ed7f7a3bbea91",
+    measurementId: "G-6W2XJ2MHHR"
 };
 
 class Firebase {
   constructor() {
     app.initializeApp(config);
 
-    this.auth = app.auth();
+    /* Helper */
+
+    this.serverValue = app.database.ServerValue;
+    this.emailAuthProvider = app.auth.EmailAuthProvider;
+
+    /* Firebase APIs */
+
+    this.authy = app.auth();
     this.db = app.database();
+
+    /* Social Sign In Method Provider */
+
+    this.googleProvider = new app.auth.GoogleAuthProvider();
+    this.facebookProvider = new app.auth.FacebookAuthProvider();
+    this.twitterProvider = new app.auth.TwitterAuthProvider();
   }
 
   // *** Auth API ***
 
   doCreateUserWithEmailAndPassword = (email, password) =>
-    this.auth.createUserWithEmailAndPassword(email, password);
+    this.authy.createUserWithEmailAndPassword(email, password);
 
   doSignInWithEmailAndPassword = (email, password) =>
-    this.auth.signInWithEmailAndPassword(email, password);
+    this.authy.signInWithEmailAndPassword(email, password);
 
-  doSignOut = () => this.auth.signOut();
+  doSignInWithGoogle = () =>
+    this.authy.signInWithPopup(this.googleProvider);
 
-  doPasswordReset = email => this.auth.sendPasswordResetEmail(email);
+  doSignInWithFacebook = () =>
+    this.authy.signInWithPopup(this.facebookProvider);
+
+  doSignInWithTwitter = () =>
+    this.authy.signInWithPopup(this.twitterProvider);
+
+  doSignOut = () => this.authy.signOut().then( 
+    localStorage.removeItem('authUser'),
+ );
+
+  doPasswordReset = email => this.authy.sendPasswordResetEmail(email);
+
+  doSendEmailVerification = () =>
+  this.authy.onAuthStateChanged(function(user) {
+    user.sendEmailVerification({
+      url: process.env.REACT_APP_CONFIRMATION_EMAIL_REDIRECT,
+    });
+  });
+
 
   doPasswordUpdate = password =>
-    this.auth.currentUser.updatePassword(password);
+    this.authy.currentUser.updatePassword(password);
+
+  // *** Merge Auth and DB User API *** //
+
+  onAuthUserListener = (next, fallback) =>
+    this.authy.onAuthStateChanged(authUser => {
+      if (authUser) {
+        this.user(authUser.uid)
+          .once('value')
+          .then(snapshot => {
+            const dbUser = snapshot.val();
+
+            // default empty roles
+            if (!dbUser.userType) {
+              dbUser.userType = {};
+            }
+
+            // merge auth and db user
+            authUser = {
+              uid: authUser.uid,
+              email: authUser.email,
+              emailVerified: authUser.emailVerified,
+              providerData: authUser.providerData,
+              ...dbUser,
+            };
+
+            next(authUser);
+          });
+      } else {
+        fallback();
+      }
+    });
 
   // *** User API ***
 
-  user = uid => this.db.ref(`users/${uid}`);
+  user = uid => this.db.ref(`Users/${uid}`);
 
-  users = () => this.db.ref('users');
+  users = () => this.db.ref('Users');
+
+  // *** Message API ***
+
+  message = uid => this.db.ref(`messages/${uid}`);
+
+  messages = () => this.db.ref('messages');
 }
 
 export default Firebase;
