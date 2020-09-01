@@ -58,7 +58,7 @@ class SignUpFormBase extends Component {
       })
       .then(() => {
         this.setState({ ...INITIAL_STATE });
-        this.props.history.push(ROUTES.HOME);
+        // this.props.history.push(ROUTES.HOME);
       })
       .catch(error => {
         if (error.code === ERROR_CODE_ACCOUNT_EXISTS) {
@@ -69,8 +69,32 @@ class SignUpFormBase extends Component {
       });
 
     event.preventDefault();
+    // --------------------------------------------
+    let stripeObj= {email:email, country:"US",business_type:"individual"}
+    let elmButton = document.querySelector("#bad-stuff");
+    console.log("Helleo")
+    fetch("/onboard-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(stripeObj)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.url) {
+          window.location = data.url;
+        } else {
+          elmButton.removeAttribute("disabled");
+          elmButton.textContent = "<Something went wrong>";
+          console.log("data", data);
+        }
+      });
   };
+  activateLasers(){
+ 
 
+  }
   onChange = event => {
     this.setState({ [event.target.name]: event.target.value });
   };
@@ -144,6 +168,8 @@ class SignUpFormBase extends Component {
             onChange={this.onChangeCheckbox}
           />
         </label>
+        <button onClick={() => this.activateLasers()} >Stripe Signup Button!</button>
+        <div id="bad-stuff">Sup</div>
         <button disabled={isInvalid} type="submit">
           Sign Up
         </button>

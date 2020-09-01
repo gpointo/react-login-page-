@@ -15,6 +15,8 @@ const Navigation = ({ authUser }) =>
   );
 
 const NavigationAuth = ({ authUser }) => (
+  <div>
+  <h1>{authUser.username}</h1>
   <ul>
     <li>
       <Link to={ROUTES.LANDING}>Landing</Link>
@@ -38,6 +40,7 @@ const NavigationAuth = ({ authUser }) => (
       <SignOutButton />
     </li>
   </ul>
+  </div>
 );
 
 const NavigationNonAuth = () => (
